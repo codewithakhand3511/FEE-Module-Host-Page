@@ -1,0 +1,268 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Discussion App</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f4f4f4;
+            margin: 0;
+            padding: 0;
+        }
+
+        .container {
+            display: flex;
+        }
+
+        .left-pane {
+            width: 30%;
+            padding: 20px;
+            background-color: #f9f9f9;
+            border-right: 1px solid #ccc;
+            box-shadow: 2px 0 5px rgba(0, 0, 0, 0.1);
+        }
+
+        .right-pane {
+            width: 70%;
+            padding: 20px;
+        }
+
+        .header {
+            background-color: #007B8F;
+            color: white;
+            padding: 15px;
+            font-size: 18px;
+            text-align: center;
+        }
+
+        .btn-primary {
+            background-color: #007BFF;
+            color: white;
+            border: none;
+            padding: 10px 15px;
+            border-radius: 5px;
+            cursor: pointer;
+            margin-bottom: 10px;
+        }
+
+        .btn-primary:hover {
+            background-color: #0056b3;
+        }
+
+        .question-item {
+            background-color: white;
+            margin: 10px 0;
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            cursor: pointer;
+            position: relative;
+        }
+
+        .question-item:hover {
+            background-color: #eef;
+        }
+
+        .vote-buttons {
+            display: flex;
+            gap: 5px;
+            position: absolute;
+            right: 10px;
+            top: 10px;
+        }
+
+        .vote-count {
+            margin-top: 5px;
+            font-size: 14px;
+            color: #555;
+        }
+
+        input[type="text"], textarea {
+            width: calc(100% - 20px);
+            padding: 10px;
+            margin: 10px 0;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+        }
+
+        #questionsList {
+            max-height: 70vh;
+            overflow-y: auto;
+        }
+
+        .response-section {
+            margin-top: 20px;
+        }
+
+        .response {
+            border-top: 1px solid #ccc;
+            padding: 10px 0;
+        }
+
+        .response-list {
+            max-height: 50vh;
+            overflow-y: auto;
+        }
+    </style>
+</head>
+<body>
+    <div class="header">Discussion Portal</div>
+    <div class="container">
+        <div class="left-pane">
+            <button id="newQuestionBtn" class="btn-primary">New Question form</button>
+            <input type="text" id="searchInput" placeholder="Search questions...">
+            <div id="questionsList"></div>
+        </div>
+        <div class="right-pane">
+            <h2>Welcome to Discussion Portal!</h2>
+            <p>Enter a subject and question to get started</p>
+            <input type="text" id="subjectInput" placeholder="Subject" required>
+            <textarea id="questionInput" placeholder="Question" required></textarea>
+            <button id="submitQuestionBtn" class="btn-primary">Submit</button>
+            <div id="questionDetails"></div>
+        </div>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const newQuestionBtn = document.getElementById('newQuestionBtn');
+            const submitQuestionBtn = document.getElementById('submitQuestionBtn');
+            const subjectInput = document.getElementById('subjectInput');
+            const questionInput = document.getElementById('questionInput');
+            const questionsList = document.getElementById('questionsList');
+            const questionDetails = document.getElementById('questionDetails');
+            const searchInput = document.getElementById('searchInput');
+
+            let questions = [];
+
+            newQuestionBtn.addEventListener('click', () => {
+                subjectInput.value = '';
+                questionInput.value = '';
+                questionDetails.innerHTML = '';
+                subjectInput.focus();
+            });
+
+            submitQuestionBtn.addEventListener('click', () => {
+                const subject = subjectInput.value.trim();
+                const questionText = questionInput.value.trim();
+                if (!subject || !questionText) {
+                    alert("Please fill in both fields.");
+                    return;
+                }
+
+                const question = {
+                    subject,
+                    questionText,
+                    responses: [],
+                    upvotes: 0,
+                    downvotes: 0,
+                    id: Date.now()
+                };
+                questions.push(question);
+                sortQuestions();
+                renderQuestions();
+                subjectInput.value = '';
+                questionInput.value = '';
+            });
+
+            searchInput.addEventListener('input', function() {
+                renderQuestions(searchInput.value.trim());
+            });
+
+            function sortQuestions() {
+                questions.sort((a, b) => (b.upvotes - b.downvotes) - (a.upvotes - a.downvotes));
+            }
+
+            function renderQuestions(filter = '') {
+                questionsList.innerHTML = '';
+                const filteredQuestions = questions.filter(q => q.subject.toLowerCase().includes(filter.toLowerCase()) || q.questionText.toLowerCase().includes(filter.toLowerCase()));
+
+                filteredQuestions.forEach((q, index) => {
+                    const questionItem = document.createElement('div');
+                    questionItem.className = 'question-item';
+                    questionItem.innerHTML = `<strong>${q.subject}</strong>: ${q.questionText}`;
+                    questionItem.addEventListener('click', () => {
+                        renderQuestionDetails(index);
+                    });
+
+                    // Upvote/Downvote buttons
+                    const voteDiv = document.createElement('div');
+                    voteDiv.className = 'vote-buttons';
+                    voteDiv.innerHTML = `
+                        <button class="btn-primary" onclick="event.stopPropagation(); upvote(${q.id})">Upvote</button>
+                        <button class="btn-primary" onclick="event.stopPropagation(); downvote(${q.id})">Downvote</button>
+                        <div class="vote-count">${q.upvotes - q.downvotes} votes</div>
+                    `;
+                    questionItem.appendChild(voteDiv);
+                    questionsList.appendChild(questionItem);
+                });
+            }
+
+            function renderQuestionDetails(index) {
+                const question = questions[index];
+                questionDetails.innerHTML = `
+                    <h3>Question</h3>
+                    <h4>${question.subject}</h4>
+                    <p>${question.questionText}</p>
+                    <button id="resolveBtn" class="btn-primary">Resolve</button>
+                    <h3>Responses</h3>
+                    <div class="response-section response-list" id="responseSection"></div>
+                    <input type="text" id="nameInput" placeholder="Enter Name" required>
+                    <textarea id="commentInput" placeholder="Enter Comment" required></textarea>
+                    <button id="submitResponseBtn" class="btn-primary">Submit Response</button>
+                `;
+
+                const responseSection = document.getElementById('responseSection');
+                question.responses.forEach(response => {
+                    const responseDiv = document.createElement('div');
+                    responseDiv.className = 'response';
+                    responseDiv.innerHTML = `<strong>${response.name}</strong>: ${response.comment} <div class="vote-count">${response.upvotes - response.downvotes} votes</div>`;
+                    responseSection.appendChild(responseDiv);
+                });
+
+                const submitResponseBtn = document.getElementById('submitResponseBtn');
+                submitResponseBtn.onclick = () => {
+                    const name = document.getElementById('nameInput').value.trim();
+                    const comment = document.getElementById('commentInput').value.trim();
+                    if (!name || !comment) {
+                        alert("Please fill in both fields.");
+                        return;
+                    }
+                    question.responses.push({ name, comment, upvotes: 0, downvotes: 0 });
+                    renderQuestionDetails(index);
+                    document.getElementById('nameInput').value = '';
+                    document.getElementById('commentInput').value = '';
+                };
+
+                const resolveBtn = document.getElementById('resolveBtn');
+                resolveBtn.onclick = () => {
+                    questions.splice(index, 1);
+                    renderQuestions();
+                    newQuestionBtn.click();
+                };
+            }
+
+            // Upvote/Downvote handling for questions
+            window.upvote = function(id) {
+                const question = questions.find(q => q.id === id);
+                if (question) {
+                    question.upvotes++;
+                    sortQuestions();
+                    renderQuestions();
+                }
+            };
+
+            window.downvote = function(id) {
+                const question = questions.find(q => q.id === id);
+                if (question) {
+                    question.downvotes++;
+                    sortQuestions();
+                    renderQuestions();
+                }
+            };
+        });
+    </script>
+</body>
+</html>

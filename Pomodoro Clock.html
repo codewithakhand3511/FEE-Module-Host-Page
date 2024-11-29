@@ -1,0 +1,196 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Pomodoro Clock</title>
+    <!-- <link rel="stylesheet" href="style.css"> -->
+     <style>
+.container {
+    width: 220px;
+    height: 460px;
+    margin: 0 auto;
+    background-color: rgba(0, 0, 0, 0.7);
+    border-radius: 10px;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    align-items: center;
+    padding: 20px;
+}
+
+.time-display {
+    width: 100%;
+    text-align: center;
+    font-size: 48px;
+    color: #fff;
+}
+
+.settings {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+
+.session-time, .break-time {
+    display: flex;
+    align-items: center;
+    margin-bottom: 10px;
+}
+
+.session-time label, .break-time label {
+    margin-right: 10px;
+}
+
+.session-time input, .break-time input {
+    width: 40px;
+    text-align: center;
+}
+
+.buttons {
+    display: flex;
+    justify-content: space-between;
+    width: 100%;
+}
+
+button {
+    padding: 10px;
+    border: none;
+    background-color: #4caf50;
+    color: #fff;
+    cursor: pointer;
+}
+
+button:disabled {
+    background-color: #ccc;
+    cursor: not-allowed;
+}
+     </style>
+</head>
+<body>
+    <div class="container">
+        <div class="time-display">
+            <span id="time">10:09</span>
+        </div>
+        <div class="settings">
+            <div class="session-time">
+                <label>Session Time:</label>
+                <button id="session-decrease">-</button>
+                <input type="number" id="session-input" value="20" disabled>
+                <button id="session-increase">+</button>
+            </div>
+            <div class="break-time">
+                <label>Break Time:</label>
+                <button id="break-decrease">-</button>
+                <input type="number" id="break-input" value="5" disabled>
+                <button id="break-increase">+</button>
+            </div>
+        </div>
+        <div class="buttons">
+            <button id="start">Start</button>
+            <button id="reset">Reset</button>
+        </div>
+    </div>
+    <script>
+const timeDisplay = document.getElementById('time');
+const sessionInput = document.getElementById('session-input');
+const breakInput = document.getElementById('break-input');
+const startButton = document.getElementById('start');
+const resetButton = document.getElementById('reset');
+const sessionDecreaseButton = document.getElementById('session-decrease');
+const sessionIncreaseButton = document.getElementById('session-increase');
+const breakDecreaseButton = document.getElementById('break-decrease');
+const breakIncreaseButton = document.getElementById('break-increase');
+
+let sessionTime = parseInt(sessionInput.value) * 60;
+let breakTime = parseInt(breakInput.value) * 60;
+let isRunning = false;
+let timer;
+
+function updateTimer() {
+    const minutes = Math.floor(sessionTime / 60);
+    const seconds = sessionTime % 60;
+    timeDisplay.textContent = `${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
+
+    if (sessionTime <= 0) {
+        clearInterval(timer);
+        isRunning = false;
+        sessionTime = parseInt(sessionInput.value) * 60;
+        breakTime = parseInt(breakInput.value) * 60;
+        startBreak();
+    }
+}
+
+function startSession() {
+    isRunning = true;
+    sessionInput.disabled = true;
+    breakInput.disabled = true;
+    sessionDecreaseButton.disabled = true;
+    sessionIncreaseButton.disabled = true;
+    breakDecreaseButton.disabled = true;
+    breakIncreaseButton.disabled = true;
+    timer = setInterval(updateTimer, 1000);
+}
+
+function startBreak() {
+    timeDisplay.textContent = "Break Time";
+    timer = setInterval(() => {
+        breakTime--;
+        if (breakTime <= 0) {
+            clearInterval(timer);
+            isRunning = false;
+            sessionTime = parseInt(sessionInput.value) * 60;
+            breakTime = parseInt(breakInput.value) * 60;
+            startSession();
+        }
+    }, 1000);
+}
+
+startButton.addEventListener('click', () => {
+    if (!isRunning) {
+        startSession();
+    }
+});
+
+resetButton.addEventListener('click', () => {
+    clearInterval(timer);
+    isRunning = false;
+    sessionTime = parseInt(sessionInput.value) * 60;
+    breakTime = parseInt(breakInput.value) * 60;
+    timeDisplay.textContent = `${sessionTime / 60}:${sessionTime % 60}`;
+    sessionInput.disabled = false;
+    breakInput.disabled = false;
+    sessionDecreaseButton.disabled = false;
+    sessionIncreaseButton.disabled = false;
+    breakDecreaseButton.disabled = false;
+    breakIncreaseButton.disabled = false;
+});
+
+sessionIncreaseButton.addEventListener('click', () => {
+    if (!isRunning) {
+        sessionInput.value = parseInt(sessionInput.value) + 1;
+        sessionTime = parseInt(sessionInput.value) * 60;
+    }
+});
+
+sessionDecreaseButton.addEventListener('click', () => {
+    if (!isRunning && parseInt(sessionInput.value) > 1) {
+        sessionInput.value = parseInt(sessionInput.value) - 1;
+        sessionTime = parseInt(sessionInput.value) * 60;
+    }
+});
+
+breakIncreaseButton.addEventListener('click', () => {
+    if (!isRunning) {
+        breakInput.value = parseInt(breakInput.value) + 1;
+        breakTime = parseInt(breakInput.value) * 60;
+    }
+});
+
+breakDecreaseButton.addEventListener('click', () => {
+    if (!isRunning && parseInt(breakInput.value) > 1) {
+        breakInput.value = parseInt(breakInput.value) - 1;
+        breakTime = parseInt(breakInput.value) * 60;
+    }
+});
+    </script>
+</body>
+</html>

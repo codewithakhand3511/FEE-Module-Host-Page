@@ -1,0 +1,161 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Stopwatch</title>
+  <!-- <link rel="stylesheet" href="styles.css"> -->
+   <style>
+    body {
+  margin: 0;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  height: 100vh;
+  background-color: black;
+  color: white;
+  font-family: Arial, sans-serif;
+}
+
+.container {
+  text-align: center;
+  padding: 20px;
+  background: #222;
+  border-radius: 10px;
+  box-shadow: 0 0 10px rgba(0, 0, 0, 0.5);
+}
+
+#timer {
+  font-size: 4rem;
+  color: #FF4500; /* Orange color for the timer */
+  margin-bottom: 20px;
+  display: block;
+}
+
+.buttons {
+  display: flex;
+  justify-content: center;
+  gap: 10px;
+  margin-bottom: 20px;
+}
+
+button {
+  padding: 10px 20px;
+  border: none;
+  border-radius: 50%;
+  font-size: 1rem;
+  cursor: pointer;
+  outline: none;
+  width: 80px;
+  height: 80px;
+}
+
+.lap-button {
+  background: #333;
+  color: white;
+}
+
+.lap-button:hover {
+  background: #555;
+}
+
+.start-button {
+  background: #008000; /* Green for Start */
+  color: white;
+}
+
+.stop-button {
+  background: #FF0000; /* Red for Stop */
+  color: white;
+}
+
+#laps {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+#laps li {
+  margin: 5px 0;
+  font-size: 1.2rem;
+  text-align: left;
+  border-bottom: 1px solid #444;
+  padding-bottom: 5px;
+}
+
+   </style>
+</head>
+<body>
+  <div class="container">
+    <label id="timer">00:00:00</label>
+    <div class="buttons">
+      <button id="lap-reset" class="lap-button">Lap</button>
+      <button id="start-stop" class="start-button">Start</button>
+    </div>
+    <ul id="laps"></ul>
+  </div>
+  <script>
+let timerDisplay = document.getElementById('timer');
+let startStopButton = document.getElementById('start-stop');
+let lapResetButton = document.getElementById('lap-reset');
+let lapsContainer = document.getElementById('laps');
+
+let timerInterval;
+let isRunning = false;
+let time = 0;
+let lapCounter = 1;
+
+// Update the display time
+function formatTime(milliseconds) {
+  let date = new Date(milliseconds);
+  let minutes = String(date.getUTCMinutes()).padStart(2, '0');
+  let seconds = String(date.getUTCSeconds()).padStart(2, '0');
+  let millisecondsStr = String(Math.floor(date.getUTCMilliseconds() / 10)).padStart(2, '0');
+  return `${minutes}:${seconds}:${millisecondsStr}`;
+}
+
+// Update the timer display
+function updateTime() {
+  time += 10; // increase time by 10 milliseconds
+  timerDisplay.textContent = formatTime(time);
+}
+
+// Start or Stop the timer
+startStopButton.addEventListener('click', () => {
+  if (!isRunning) {
+    timerInterval = setInterval(updateTime, 10); // update every 10ms
+    startStopButton.textContent = 'Stop';
+    startStopButton.classList.remove('start-button');
+    startStopButton.classList.add('stop-button');
+    lapResetButton.textContent = 'Lap';
+    isRunning = true;
+  } else {
+    clearInterval(timerInterval);
+    startStopButton.textContent = 'Start';
+    startStopButton.classList.remove('stop-button');
+    startStopButton.classList.add('start-button');
+    lapResetButton.textContent = 'Reset';
+    isRunning = false;
+  }
+});
+
+// Lap or Reset functionality
+lapResetButton.addEventListener('click', () => {
+  if (isRunning) {
+    // Create a new lap
+    let lapItem = document.createElement('li');
+    lapItem.textContent = `Lap ${lapCounter++} - ${formatTime(time)}`;
+    lapsContainer.prepend(lapItem);
+  } else {
+    // Reset the stopwatch
+    time = 0;
+    timerDisplay.textContent = '00:00:00';
+    lapsContainer.innerHTML = '';
+    lapCounter = 1;
+    lapResetButton.textContent = 'Lap';
+  }
+});
+
+  </script>
+</body>
+</html>
